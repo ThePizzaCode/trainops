@@ -69,3 +69,38 @@ search_train_number() {
 done
 }
 
+search_train_date(){
+    departure_station="Bucureşti Nord Gr.A"
+    arrival_station="Ploieşti Vest"
+    ride_date="20241124"
+
+    departure_id=$(awk -F',' -v dep="$departure_station" '$2 == dep { print $1; }' "$stops_file")
+
+    if [[ -z "$departure_id" ]]; then
+        echo "No matching station found for $departure_station."
+        return
+    fi
+
+    arrival_id=$(awk -F',' -v dep="$arrival_station" '$2 == dep { print $1; }' "$stops_file")
+
+    if [[ -z "$arrival_id" ]]; then
+        echo "No matching station found for $arrival_station."
+        return
+    fi
+
+    if validate_date $ride_date; then
+        echo "Valid date"
+    else
+        echo "Invalid date"
+        return 1;
+    fi
+
+    day_of_week=$(get_day_of_week "$ride_date") # We can now filter calendar.txt to extract service_ids that run on this day
+
+    filter_routes_by_service_ids $day_of_week $ride_date $departure_id $arrival_id
+
+
+
+
+
+}

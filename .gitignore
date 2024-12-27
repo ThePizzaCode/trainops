@@ -1,0 +1,16 @@
+.DS_Store
+.git/index.lock
+.idea
+.vscode
+*.pyc
+*.swp
+__pycache__
+*~*
+node_modules
+yarn.lock
+package-lock.json
+coverage
+dist
+build
+logs
+*.log
