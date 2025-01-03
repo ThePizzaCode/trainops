@@ -13,7 +13,7 @@ EOF
 }
 
 # Function to search for trains by date, departure station, and arrival station
-search_trains_by_date() {
+search_itinerary() {
     read -p "Enter the date (YYYY-MM-DD): " date
     read -p "Enter the departure station name: " departure_station
     read -p "Enter the arrival station name: " arrival_station
@@ -42,27 +42,6 @@ ORDER BY dep_times.departure_time;
 EOF
 }
 
-# Function to test/debug schema
-validate_schema() {
-    echo "Validating database schema..."
-    
-    # List all tables
-    echo "Tables in the database:"
-    debug_query ".tables"
-
-    # Display schema of `trips`, `stops`, `stop_times`, and `calendar_dates`
-    echo "Schema of trips:"
-    debug_query ".schema trips"
-    
-    echo "Schema of stops:"
-    debug_query ".schema stops"
-
-    echo "Schema of stop_times:"
-    debug_query ".schema stop_times"
-
-    echo "Schema of calendar_dates:"
-    debug_query ".schema calendar_dates"
-}
 
 # Function to search by trip ID
 search_by_trip_id() {
@@ -113,7 +92,6 @@ main_menu() {
     echo "Choose a search method:"
     echo "1. Search by Train ID"
     echo "2. Search by Itinerary (Date, Departure, Arrival)"
-    echo "3. Debug Database Schema"
     read -p "Enter choice (1, 2, or 3): " choice
 
     case "$choice" in
@@ -121,10 +99,7 @@ main_menu() {
             search_by_trip_id
             ;;
         2)
-            search_trains_by_date
-            ;;
-        3)
-            validate_schema
+            search_itinerary
             ;;
         *)
             echo "Invalid choice. Please enter 1, 2, or 3."

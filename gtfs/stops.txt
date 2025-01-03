@@ -1669,3 +1669,5 @@ stop_id,stop_name,stop_lat,stop_lon
 83193,Tulcea Mărfuri,45.169057,28.766117
 83222,Tulcea Oraş,45.182399,28.790789
 89733,Ram. M.K.P. Aj. M.,44.397547,28.44017
+
+
