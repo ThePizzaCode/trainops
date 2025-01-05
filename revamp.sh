@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DB_PATH="gtfs.db"
+DB_PATH="../trainops/gtfs.db"
 
 # Debugging function to display query results for debugging purposes
 debug_query() {
@@ -14,9 +14,13 @@ EOF
 
 # Function to search for trains by date, departure station, and arrival station
 search_itinerary() {
-    read -p "Enter the date (YYYY-MM-DD): " date
-    read -p "Enter the departure station name: " departure_station
-    read -p "Enter the arrival station name: " arrival_station
+    # read -p "Enter the date (YYYY-MM-DD): " date
+    # read -p "Enter the departure station name: " departure_station
+    # read -p "Enter the arrival station name: " arrival_station
+
+    date=$1
+    departure_station=$2
+    arrival_station=$3
 
     echo "Searching trains for the given itinerary..."
 
@@ -34,9 +38,9 @@ JOIN stop_times AS arr_times ON trips.trip_id = arr_times.trip_id
 JOIN stops AS dep_stops ON dep_times.stop_id = dep_stops.stop_id
 JOIN stops AS arr_stops ON arr_times.stop_id = arr_stops.stop_id
 JOIN calendar_dates ON trips.service_id = calendar_dates.service_id
-WHERE dep_stops.stop_name = "$departure_station"
-  AND arr_stops.stop_name = "$arrival_station"
-  AND calendar_dates.date = "$date"
+WHERE dep_stops.stop_name = '$departure_station'
+  AND arr_stops.stop_name = '$arrival_station'
+  AND calendar_dates.date = '$date'
   AND dep_times.stop_sequence < arr_times.stop_sequence
 ORDER BY dep_times.departure_time;
 EOF
@@ -45,61 +49,37 @@ EOF
 
 # Function to search by trip ID
 search_by_trip_id() {
-    read -p "Enter a train number (trip ID): " trip_id
-
-    echo "Fetching route details for Train ID: $trip_id..."
+    trip_id=$1
 
     sqlite3 "$DB_PATH" <<EOF
-.headers on
-.mode column
-SELECT routes.route_short_name AS "Route Short Name",
-       routes.route_long_name AS "Route Long Name"
-FROM routes
-JOIN trips ON routes.route_id = trips.route_id
-WHERE trips.trip_id = "$trip_id";
-EOF
-
-    echo "Fetching agency details..."
-    sqlite3 "$DB_PATH" <<EOF
-.headers on
-.mode column
-SELECT agency.agency_name AS "Agency Name",
-       agency.agency_url AS "Agency URL",
-       agency.agency_timezone AS "Agency Timezone"
-FROM agency
-JOIN routes ON agency.agency_id = routes.agency_id
-JOIN trips ON trips.route_id = routes.route_id
-WHERE trips.trip_id = "$trip_id";
-EOF
-
-    echo "Fetching stop times for the trip..."
-    sqlite3 "$DB_PATH" <<EOF
-.headers on
-.mode column
+.headers off
+.mode csv
     SELECT stop_times.stop_sequence AS "Stop Sequence",
         stops.stop_name AS "Stop Name",
         stop_times.arrival_time AS "Arrival Time",
         stop_times.departure_time AS "Departure Time"
     FROM stop_times
     JOIN stops ON stop_times.stop_id = stops.stop_id
-    WHERE stop_times.trip_id = "$trip_id"
-    ORDER BY stop_times.stop_sequence;
+    WHERE stop_times.trip_id = '$trip_id'
+    ORDER BY CAST(stop_times.stop_sequence AS INTEGER);
 EOF
 }
 
-# Main menu
-main_menu() {
-    echo "Choose a search method:"
-    echo "1. Search by Train ID"
-    echo "2. Search by Itinerary (Date, Departure, Arrival)"
-    read -p "Enter choice (1, 2, or 3): " choice
+handle_request() {
+    IFS="," read -r -a request <<< "$1"
+    
+    endpoint=${request[0]}
 
-    case "$choice" in
-        1)
-            search_by_trip_id
+    case $endpoint in
+        train_id)
+            id=${request[1]}
+            search_by_trip_id $id
             ;;
-        2)
-            search_itinerary
+        route)
+            date=${request[1]}
+            from=${request[2]}
+            to=${request[3]}
+            search_itinerary $date $from $to 
             ;;
         *)
             echo "Invalid choice. Please enter 1, 2, or 3."
@@ -107,5 +87,4 @@ main_menu() {
     esac
 }
 
-# Run the main menu
-main_menu
+handle_request $1
