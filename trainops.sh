@@ -111,18 +111,18 @@ handle_request() {
     endpoint=${request[0]}
 
     case $endpoint in
-        train_id)
+        check_itinerary)
             id=${request[1]}
             search_by_trip_id $id
             ;;
 
-        route)
+        find_itinerary)
             arrival_station=${request[1]} 
             departure_time=${request[2]} 
             search_itinerary $arrival_station $departure_time
             ;;
 
-        search)
+        search_stop)
             search_stop_name_similar ${request[1]} 
             ;;
 
