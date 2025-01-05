@@ -1,48 +1,37 @@
 #!/bin/bash
 
-REQ_PORT=12345 # Port for sending requests
-RES_PORT=12346 # Port for receiving responses
+MAIN_REQ_PORT=7000
+MAIN_RES_PORT=7001
 
-# Function to send a request and receive a response
-send_request() {
-    local request="$1"
-
-    # Send the request to the server
-    echo -e "$request" | nc localhost "$REQ_PORT" &
-
-    # Listen for the response on the response port
-    echo "Waiting for server response..."
-    response=$(nc -l "$RES_PORT")
-    echo "Response received: $response"
-}
-
-# Menu for client
 while true; do
-    echo "Choose an option:"
-    echo "1. Search Train by Number"
-    echo "2. Search Itinerary"
-    echo "3. Exit"
-    read -p "Enter your choice: " choice
+    echo "===== Client Menu ====="
+    echo "1) Search Train by Number"
+    echo "2) Exit"
+    read -p "Choice: " choice
 
     case "$choice" in
         1)
             read -p "Enter train number: " train_number
-            request="{\"type\":\"search_train\",\"train_number\":\"$train_number\"}"
-            send_request "$request"
+
+            # We'll build a JSON-ish or CSV-ish request (similar to your existing approach)
+            # Let's do something like "search_train,train_number,1234"
+            request="search_train,train_number,$train_number"
+
+            # 1) Send request to main on port 7000
+            echo "[client] Sending request to main: $request"
+            echo -e "$request" | nc localhost "$MAIN_REQ_PORT" &
+
+            # 2) Listen for final response on 7001
+            echo "[client] Waiting for response on port $MAIN_RES_PORT..."
+            response=$(nc -l -p "$MAIN_RES_PORT")
+            echo "[client] Received response: $response"
             ;;
         2)
-            read -p "Enter date (YYYY-MM-DD): " date
-            read -p "Enter departure station: " departure_station
-            read -p "Enter arrival station: " arrival_station
-            request="{\"type\":\"search_itinerary\",\"date\":\"$date\",\"departure_station\":\"$departure_station\",\"arrival_station\":\"$arrival_station\"}"
-            send_request "$request"
-            ;;
-        3)
-            echo "Exiting client."
+            echo "[client] Exiting."
             break
             ;;
         *)
-            echo "Invalid choice. Please try again."
+            echo "Invalid choice."
             ;;
     esac
 done
